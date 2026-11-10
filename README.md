@@ -80,3 +80,7 @@ offendersAfter, ok}`.
 Seated as a child of `@red-cup-engineering/flatfile` (the flatfile
 section owns the byte-touch; this child owns where a service's flatfile
 data may live).
+
+## Acceptance
+
+Run `npm test` for the source suite. See the [API reference](docs/API.md) and [runnable consumer example](examples/quickstart.test.mjs).

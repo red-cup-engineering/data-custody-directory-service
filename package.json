@@ -35,11 +35,14 @@
   "files": [
     "README.md",
     "scripts",
-    "src"
+    "src",
+    "docs/API.md",
+    "examples/quickstart.test.mjs"
   ],
   "sideEffects": false,
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "test:consumer": "node --test examples/quickstart.test.mjs"
   },
   "engines": {
     "node": ">=22"
