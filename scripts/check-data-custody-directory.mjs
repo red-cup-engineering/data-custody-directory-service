@@ -3,9 +3,9 @@ import { readdirSync, realpathSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { DATA_CUSTODY_KINDS, dataCustodyDirectory } from "../src/data-custody-directory.mjs";
+import { DATA_STORAGE_KINDS, dataStorageDirectory } from "../src/data-custody-directory.mjs";
 
-const DATA_CUSTODY_KIND_SET = new Set(DATA_CUSTODY_KINDS);
+const DATA_STORAGE_KIND_SET = new Set(DATA_STORAGE_KINDS);
 
 /**
  * @param {string} metaUrl
@@ -29,8 +29,8 @@ function isEntrypoint(metaUrl) {
  * @returns {Readonly<{root: string, dataDirectory: string, conformant: boolean, offenders: readonly string[]}>}
  * @throws {TypeError} when root is invalid
  */
-export function checkDataCustodyDirectory(root) {
-  const dataDirectory = dirname(dataCustodyDirectory(root, "logs"));
+export function checkDataStorageDirectory(root) {
+  const dataDirectory = dirname(dataStorageDirectory(root, "logs"));
   let entries;
   try {
     entries = readdirSync(dataDirectory);
@@ -40,7 +40,7 @@ export function checkDataCustodyDirectory(root) {
     }
     throw error;
   }
-  const offenders = Object.freeze(entries.filter((name) => !DATA_CUSTODY_KIND_SET.has(name)));
+  const offenders = Object.freeze(entries.filter((name) => !DATA_STORAGE_KIND_SET.has(name)));
   return Object.freeze({ root, dataDirectory, conformant: offenders.length === 0, offenders });
 }
 
@@ -54,7 +54,7 @@ function main(argv) {
     console.error("usage: check-data-custody-directory.mjs --root <dir>");
     process.exit(1);
   }
-  const result = checkDataCustodyDirectory(values.root);
+  const result = checkDataStorageDirectory(values.root);
   console.log(JSON.stringify(result, null, 2));
   if (!result.conformant) {
     process.exit(1);

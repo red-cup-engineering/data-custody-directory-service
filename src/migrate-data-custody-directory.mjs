@@ -1,9 +1,9 @@
 import { dirname, extname, join, relative } from "node:path";
 import { mkdirSync, readFileSync, readdirSync, rmdirSync, renameSync, statSync } from "node:fs";
-import { DATA_CUSTODY_KINDS } from "./data-custody-directory.mjs";
+import { DATA_STORAGE_KINDS } from "./data-custody-directory.mjs";
 import { spawnGitSync } from '@red-cup-engineering/git-engine/git-process';
 
-const DATA_CUSTODY_KIND_SET = new Set(DATA_CUSTODY_KINDS);
+const DATA_STORAGE_KIND_SET = new Set(DATA_STORAGE_KINDS);
 
 /**
  * Top-level entry names/tokens that mark a journal or event-stream feed —
@@ -216,7 +216,7 @@ function classifiedRow({ name, kind, classification, reason }) {
  * }>} entry
  * @returns {Readonly<{entry: string, kind: "file"|"directory", classification: "logs"|"records"|"state"|"purge", reason: string, destination: string}> | Readonly<{entry: string, reason: "unclassified"}>}
  */
-export function classifyDataCustodyEntry(entry) {
+export function classifyDataStorageEntry(entry) {
   const { name, kind } = entry;
 
   if (entry.isJsonlLike) {
@@ -318,7 +318,7 @@ function describeEntry(dataDir, name) {
  * @param {string} dataDir - absolute path to a section's `data/` directory
  * @returns {Readonly<{dataDir: string, rows: readonly ReturnType<typeof classifyDataCustodyEntry>[], refusals: readonly (Readonly<{entry: string, reason: "unclassified"}> | Readonly<{entry: string, classification: string, reason: "referenced-by-writer", references: readonly string[]}>)[]}>}
  */
-export function planDataCustodyMigration(dataDir) {
+export function planDataStorageMigration(dataDir) {
   let entries;
   try {
     entries = readdirSync(dataDir);
@@ -329,19 +329,19 @@ export function planDataCustodyMigration(dataDir) {
     throw error;
   }
   const packageRoot = dirname(dataDir);
-  const offenders = entries.filter((name) => !DATA_CUSTODY_KIND_SET.has(name)).sort();
+  const offenders = entries.filter((name) => !DATA_STORAGE_KIND_SET.has(name)).sort();
   const rows = [];
-  const refusals = [];
+  const rejections = [];
   for (const name of offenders) {
     const described = describeEntry(dataDir, name);
-    const classified = classifyDataCustodyEntry(described);
+    const classified = classifyDataStorageEntry(described);
     if (classified.classification === undefined) {
-      refusals.push(classified);
+      rejections.push(classified);
       continue;
     }
     const references = findDataEntryReferences(packageRoot, name);
     if (references.length > 0) {
-      refusals.push(Object.freeze({
+      rejections.push(Object.freeze({
         entry: name,
         classification: classified.classification,
         reason: "referenced-by-writer",
@@ -351,7 +351,7 @@ export function planDataCustodyMigration(dataDir) {
     }
     rows.push(classified);
   }
-  return Object.freeze({ dataDir, rows: Object.freeze(rows), refusals: Object.freeze(refusals) });
+  return Object.freeze({ dataDir, rows: Object.freeze(rows), refusals: Object.freeze(rejections) });
 }
 
 /**
@@ -391,7 +391,7 @@ function isGitRepo(repoRoot) {
  * @returns {Readonly<{entry: string, classification: string, method: "git-mv"|"fs-rename"|"rmdir", destination: string | null}>}
  * @throws {Error} when row is a refusal (has no classification)
  */
-export function applyDataCustodyMigrationRow(dataDir, row) {
+export function applyDataStorageMigrationRow(dataDir, row) {
   if (row.classification === undefined) {
     throw new Error(`migrate-data-custody-directory: refusal row "${row.entry}" cannot be applied — it is unclassified`);
   }
@@ -432,10 +432,10 @@ export function applyDataCustodyMigrationRow(dataDir, row) {
  * @param {readonly ReturnType<typeof classifyDataCustodyEntry>[]} rows - classified (non-refusal) plan rows
  * @returns {readonly ReturnType<typeof applyDataCustodyMigrationRow>[]}
  */
-export function applyDataCustodyMigrationPlan(dataDir, rows) {
+export function applyDataStorageMigrationPlan(dataDir, rows) {
   const applied = [];
   for (const row of rows) {
-    applied.push(applyDataCustodyMigrationRow(dataDir, row));
+    applied.push(applyDataStorageMigrationRow(dataDir, row));
   }
   return Object.freeze(applied);
 }

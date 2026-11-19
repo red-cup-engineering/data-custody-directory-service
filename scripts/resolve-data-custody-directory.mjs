@@ -2,7 +2,7 @@
 import { mkdirSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { dataCustodyDirectory } from "../src/data-custody-directory.mjs";
+import { dataStorageDirectory } from "../src/data-custody-directory.mjs";
 
 /**
  * @param {string} metaUrl
@@ -28,8 +28,8 @@ function isEntrypoint(metaUrl) {
  * @returns {string} the resolved absolute path
  * @throws {TypeError} when root, kind, or any segment is invalid
  */
-export function resolveDataCustodyDirectory(root, kind, segments = [], { create = false } = {}) {
-  const directory = dataCustodyDirectory(root, kind, ...segments);
+export function resolveDataStorageDirectory(root, kind, segments = [], { create = false } = {}) {
+  const directory = dataStorageDirectory(root, kind, ...segments);
   if (create) {
     mkdirSync(directory, { recursive: true });
   }
@@ -50,7 +50,7 @@ function main(argv) {
     console.error("usage: resolve-data-custody-directory.mjs --root <dir> --kind <logs|records|state> [segments...] [--create]");
     process.exit(1);
   }
-  const directory = resolveDataCustodyDirectory(values.root, values.kind, positionals, { create: values.create });
+  const directory = resolveDataStorageDirectory(values.root, values.kind, positionals, { create: values.create });
   console.log(directory);
 }
 
