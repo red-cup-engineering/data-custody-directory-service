@@ -1,7 +1,7 @@
 import { dirname, extname, join, relative } from "node:path";
 import { mkdirSync, readFileSync, readdirSync, rmdirSync, renameSync, statSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { DATA_CUSTODY_KINDS } from "./data-custody-directory.mjs";
+import { spawnGitSync } from '@red-cup-engineering/git-engine/git-process';
 
 const DATA_CUSTODY_KIND_SET = new Set(DATA_CUSTODY_KINDS);
 
@@ -361,11 +361,11 @@ export function planDataCustodyMigration(dataDir) {
  */
 function gitPathStatus(repoRoot, absPath) {
   const rel = relative(repoRoot, absPath);
-  const tracked = spawnSync("git", ["ls-files", "--error-unmatch", "--", rel], { cwd: repoRoot, encoding: "utf8" });
+  const tracked = spawnGitSync(["ls-files", "--error-unmatch", "--", rel], { cwd: repoRoot, encoding: "utf8" });
   if (tracked.status === 0 && tracked.stdout.trim().length > 0) {
     return "tracked";
   }
-  const ignored = spawnSync("git", ["check-ignore", "--quiet", "--", rel], { cwd: repoRoot });
+  const ignored = spawnGitSync(["check-ignore", "--quiet", "--", rel], { cwd: repoRoot });
   if (ignored.status === 0) {
     return "ignored";
   }
@@ -377,7 +377,7 @@ function gitPathStatus(repoRoot, absPath) {
  * @returns {boolean}
  */
 function isGitRepo(repoRoot) {
-  const result = spawnSync("git", ["rev-parse", "--is-inside-work-tree"], { cwd: repoRoot, encoding: "utf8" });
+  const result = spawnGitSync(["rev-parse", "--is-inside-work-tree"], { cwd: repoRoot, encoding: "utf8" });
   return result.status === 0 && result.stdout.trim() === "true";
 }
 
@@ -405,12 +405,12 @@ export function applyDataCustodyMigrationRow(dataDir, row) {
   const destinationPath = join(dataDir, row.classification, row.entry);
   mkdirSync(join(dataDir, row.classification), { recursive: true });
 
-  const repoRootResult = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: dataDir, encoding: "utf8" });
+  const repoRootResult = spawnGitSync(["rev-parse", "--show-toplevel"], { cwd: dataDir, encoding: "utf8" });
   const repoRoot = repoRootResult.status === 0 ? repoRootResult.stdout.trim() : null;
 
   let method = "fs-rename";
   if (repoRoot && isGitRepo(repoRoot) && gitPathStatus(repoRoot, sourcePath) === "tracked") {
-    const mv = spawnSync("git", ["mv", "--", relative(repoRoot, sourcePath), relative(repoRoot, destinationPath)], {
+    const mv = spawnGitSync(["mv", "--", relative(repoRoot, sourcePath), relative(repoRoot, destinationPath)], {
       cwd: repoRoot,
       encoding: "utf8",
     });

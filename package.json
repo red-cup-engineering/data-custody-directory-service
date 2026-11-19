@@ -45,5 +45,8 @@
   "funding": {
     "type": "individual",
     "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
+  },
+  "dependencies": {
+    "@red-cup-engineering/git-engine": "^0.1.11-dev.0"
   }
 }
