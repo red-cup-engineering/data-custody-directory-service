@@ -11,9 +11,9 @@ import { resolve, sep } from "node:path";
  *
  * @type {readonly ["logs", "records", "state"]}
  */
-export const DATA_STORAGE_KINDS = Object.freeze(["logs", "records", "state"]);
+export const DATA_CUSTODY_KINDS = Object.freeze(["logs", "records", "state"]);
 
-const DATA_STORAGE_KIND_SET = new Set(DATA_STORAGE_KINDS);
+const DATA_CUSTODY_KIND_SET = new Set(DATA_CUSTODY_KINDS);
 
 /**
  * @param {string} root
@@ -32,9 +32,9 @@ function requireRoot(root) {
  * @throws {TypeError} when kind is not one of DATA_CUSTODY_KINDS
  */
 function requireKind(kind) {
-  if (!DATA_STORAGE_KIND_SET.has(kind)) {
+  if (!DATA_CUSTODY_KIND_SET.has(kind)) {
     throw new TypeError(
-      `data-custody-directory: kind must be one of ${DATA_STORAGE_KINDS.join(", ")}, got ${JSON.stringify(kind)}`,
+      `data-custody-directory: kind must be one of ${DATA_CUSTODY_KINDS.join(", ")}, got ${JSON.stringify(kind)}`,
     );
   }
 }
@@ -69,7 +69,7 @@ function requireSegments(segments) {
  * @returns {string} the absolute resolved path `<root>/data/<kind>/<segments...>`
  * @throws {TypeError} when root, kind, or any segment is invalid
  */
-export function dataStorageDirectory(root, kind, ...segments) {
+export function dataCustodyDirectory(root, kind, ...segments) {
   requireRoot(root);
   requireKind(kind);
   requireSegments(segments);
@@ -83,12 +83,12 @@ export function dataStorageDirectory(root, kind, ...segments) {
  * @returns {Readonly<{root: string, logs: string, records: string, state: string}>}
  * @throws {TypeError} when root is invalid
  */
-export function dataStorageDirectories(root) {
+export function dataCustodyDirectories(root) {
   requireRoot(root);
   return Object.freeze({
     root,
-    logs: dataStorageDirectory(root, "logs"),
-    records: dataStorageDirectory(root, "records"),
-    state: dataStorageDirectory(root, "state"),
+    logs: dataCustodyDirectory(root, "logs"),
+    records: dataCustodyDirectory(root, "records"),
+    state: dataCustodyDirectory(root, "state"),
   });
 }

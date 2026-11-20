@@ -3,10 +3,10 @@ import { dirname } from "node:path";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { checkDataStorageDirectory } from "./check-data-custody-directory.mjs";
+import { checkDataCustodyDirectory } from "./check-data-custody-directory.mjs";
 import {
-  applyDataStorageMigrationPlan,
-  planDataStorageMigration,
+  applyDataCustodyMigrationPlan,
+  planDataCustodyMigration,
 } from "../src/migrate-data-custody-directory.mjs";
 
 /**
@@ -33,7 +33,7 @@ function isEntrypoint(metaUrl) {
  */
 export function resolveMigrationDataDir({ dataDir, packageDir }) {
   if (dataDir) return dataDir;
-  if (packageDir) return checkDataStorageDirectory(packageDir).dataDirectory;
+  if (packageDir) return checkDataCustodyDirectory(packageDir).dataDirectory;
   throw new Error("migrate-data-custody-directory: one of --data-dir or --package is required");
 }
 
@@ -55,8 +55,8 @@ export function resolveMigrationDataDir({ dataDir, packageDir }) {
  *   ok: boolean,
  * }>}
  */
-export function migrateDataStorageDirectory(dataDir, { apply = false } = {}) {
-  const plan = planDataStorageMigration(dataDir);
+export function migrateDataCustodyDirectory(dataDir, { apply = false } = {}) {
+  const plan = planDataCustodyMigration(dataDir);
 
   if (!apply) {
     return Object.freeze({
@@ -70,9 +70,9 @@ export function migrateDataStorageDirectory(dataDir, { apply = false } = {}) {
     });
   }
 
-  const applied = applyDataStorageMigrationPlan(dataDir, plan.rows);
+  const applied = applyDataCustodyMigrationPlan(dataDir, plan.rows);
   const root = dirname(dataDir);
-  const gate = checkDataStorageDirectory(root);
+  const gate = checkDataCustodyDirectory(root);
   const offendersAfter = gate.offenders.length;
 
   return Object.freeze({
@@ -140,7 +140,7 @@ function main(argv) {
   }
 
   const apply = values.apply === true;
-  const result = migrateDataStorageDirectory(dataDir, { apply });
+  const result = migrateDataCustodyDirectory(dataDir, { apply });
   console.log(JSON.stringify(result, null, 2));
 
   if (result.refusals.length > 0) {
